@@ -1,66 +1,536 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <title>My Simple Web</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #1e90ff;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-    .container {
-      padding: 20px;
-    }
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      max-width: 500px;
-      margin: auto;
-    }
-    button {
-      background: #1e90ff;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #187bcd;
-    }
-  </style>
+<html><head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans,"Anthropic Sans",sans-serif);background:transparent;color:var(--color-text-primary)}
+h2.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* Nav tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:0 0 16px}
+.tab{padding:7px 16px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:13px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-secondary);transition:all .15s}
+.tab.active{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info)}
+.tab:hover:not(.active){background:var(--color-background-secondary)}
+
+/* Panels */
+.panel{display:none}.panel.active{display:block}
+
+/* Section labels */
+.zone-label{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:6px}
+
+/* Topology canvas */
+.topo-wrap{overflow-x:auto;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px;background:var(--color-background-secondary)}
+svg.topo{min-width:860px;width:100%}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary)}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+
+/* Use case grid */
+.uc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:10px}
+.uc-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;cursor:pointer;transition:border-color .15s}
+.uc-card:hover{border-color:var(--color-border-info)}
+.uc-tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;margin-bottom:6px;font-weight:500}
+.uc-title{font-size:13px;font-weight:500;margin-bottom:4px}
+.uc-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+
+/* Competitor table */
+.comp-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.comp-table th{text-align:left;padding:8px 10px;font-weight:500;font-size:11px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
+.comp-table td{padding:8px 10px;border-bottom:0.5px solid var(--color-border-tertiary);vertical-align:top;line-height:1.5}
+.comp-table tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:500}
+.badge-win{background:var(--color-background-success);color:var(--color-text-success)}
+.badge-neu{background:var(--color-background-warning);color:var(--color-text-warning)}
+.badge-risk{background:var(--color-background-danger);color:var(--color-text-danger)}
+
+/* Info modal (inline) */
+.info-box{display:none;margin-top:10px;padding:14px;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-info);background:var(--color-background-info)}
+.info-box.show{display:block}
+.info-box h4{font-size:13px;font-weight:500;color:var(--color-text-info);margin-bottom:6px}
+.info-box p{font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+.close-btn{float:right;cursor:pointer;font-size:11px;color:var(--color-text-info)}
+
+/* Highlight on SVG click */
+.node-btn{cursor:pointer}
+.node-btn:hover rect,.node-btn:hover circle{opacity:.85}
+</style>
 </head>
 <body>
+<h2 class="sr-only">F5 XC Enterprise Topology — interactive diagram with use cases and competitive analysis</h2>
 
-  <header>
-    <h1>Welcome</h1>
-    <p>เว็บตัวอย่าง HTML ง่าย ๆ</p>
-  </header>
+<div class="tabs">
+  <button class="tab active" onclick="showPanel('topology')">🗺 Topology</button>
+  <button class="tab" onclick="showPanel('usecases')">💡 Use Cases</button>
+  <button class="tab" onclick="showPanel('compete')">⚔️ Competitive Analysis</button>
+</div>
 
-  <div class="container">
-    <div class="card">
-      <h2>สวัสดีครับ 👋</h2>
-      <p>นี่คือหน้าเว็บ HTML แบบง่าย ใช้ไฟล์เดียว</p>
-      <button onclick="sayHello()">กดดูข้อความ</button>
-      <p id="msg"></p>
-    </div>
+<!-- TOPOLOGY PANEL -->
+<div class="panel active" id="panel-topology">
+  <div style="margin-bottom:10px;font-size:12px;color:var(--color-text-secondary)">คลิกที่ component เพื่อดูรายละเอียด</div>
+  <div class="topo-wrap">
+  <svg class="topo" viewBox="0 0 880 620" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </marker>
+  </defs>
+
+  <!-- ====== ZONES ====== -->
+  <!-- Internet / Users zone -->
+  <rect x="10" y="10" width="860" height="80" rx="10" fill="none" stroke="#888780" stroke-width="0.5" stroke-dasharray="4 3"></rect>
+  <text x="20" y="28" font-size="10" fill="#888780" font-family="var(--font-sans)" font-weight="500">INTERNET / END USERS</text>
+
+  <!-- On-Prem DC zone -->
+  <rect x="10" y="110" width="270" height="490" rx="10" fill="none" stroke="#185FA5" stroke-width="0.5" stroke-dasharray="4 3"></rect>
+  <text x="20" y="128" font-size="10" fill="#185FA5" font-family="var(--font-sans)" font-weight="500">ON-PREM DATACENTER</text>
+
+  <!-- Private Cloud zone -->
+  <rect x="295" y="110" width="270" height="490" rx="10" fill="none" stroke="#0F6E56" stroke-width="0.5" stroke-dasharray="4 3"></rect>
+  <text x="305" y="128" font-size="10" fill="#0F6E56" font-family="var(--font-sans)" font-weight="500">PRIVATE CLOUD (VMware / OpenStack)</text>
+
+  <!-- Public Cloud zone -->
+  <rect x="580" y="110" width="290" height="490" rx="10" fill="none" stroke="#993C1D" stroke-width="0.5" stroke-dasharray="4 3"></rect>
+  <text x="590" y="128" font-size="10" fill="#993C1D" font-family="var(--font-sans)" font-weight="500">PUBLIC CLOUD (AWS / Azure / GCP)</text>
+
+  <!-- ====== USERS ====== -->
+  <!-- Mobile user -->
+  <g class="node-btn" onclick="showInfo('Mobile / Internet Users','ผู้ใช้ปลายทางผ่าน Mobile Banking, Web App, API Consumer, Third-party Partner ครอบคลุม retail, corporate, API marketplace')">
+    <rect x="30" y="30" width="100" height="36" rx="6" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"></rect>
+    <text x="80" y="51" text-anchor="middle" font-size="11" fill="#0C447C" font-family="var(--font-sans)" font-weight="500">📱 Mobile / Web</text>
+  </g>
+  <!-- Bot / API -->
+  <g class="node-btn" onclick="showInfo('Bot &amp; API Clients','Automated bots, fintech API consumers, Open Banking partners, scraping threats')">
+    <rect x="150" y="30" width="100" height="36" rx="6" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"></rect>
+    <text x="200" y="51" text-anchor="middle" font-size="11" fill="#633806" font-family="var(--font-sans)" font-weight="500">🤖 Bot / API</text>
+  </g>
+  <!-- Branch -->
+  <g class="node-btn" onclick="showInfo('Branch / ATM / POS','สาขา, ATM, POS terminal เชื่อมต่อผ่าน SD-WAN / MPLS กลับ DC')">
+    <rect x="270" y="30" width="110" height="36" rx="6" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"></rect>
+    <text x="325" y="51" text-anchor="middle" font-size="11" fill="#27500A" font-family="var(--font-sans)" font-weight="500">🏧 Branch / ATM</text>
+  </g>
+  <!-- Partner API -->
+  <g class="node-btn" onclick="showInfo('Open Banking / Partner API','FinTech partners, Payment gateway, SWIFT, PromptPay, government API เชื่อมต่อผ่าน API GW')">
+    <rect x="400" y="30" width="120" height="36" rx="6" fill="#FBEAF0" stroke="#993556" stroke-width="0.5"></rect>
+    <text x="460" y="51" text-anchor="middle" font-size="11" fill="#4B1528" font-family="var(--font-sans)" font-weight="500">🔗 Open Banking</text>
+  </g>
+  <!-- Attacker -->
+  <g class="node-btn" onclick="showInfo('Threat Actors','DDoS, OWASP Top-10, credential stuffing, bot farms, account takeover, API abuse')">
+    <rect x="540" y="30" width="100" height="36" rx="6" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.5"></rect>
+    <text x="590" y="51" text-anchor="middle" font-size="11" fill="#501313" font-family="var(--font-sans)" font-weight="500">☠️ Threat Actors</text>
+  </g>
+  <!-- IOT -->
+  <g class="node-btn" onclick="showInfo('IoT / Industrial','Smart factory sensor, OT/SCADA, connected vehicle, edge device สำหรับ industry')">
+    <rect x="660" y="30" width="110" height="36" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="715" y="51" text-anchor="middle" font-size="11" fill="#04342C" font-family="var(--font-sans)" font-weight="500">🏭 IoT / Industrial</text>
+  </g>
+
+  <!-- ====== F5 XC GLOBAL NETWORK LAYER ====== -->
+  <rect x="10" y="98" width="860" height="14" rx="4" fill="#533AB7" opacity="0.15"></rect>
+  <text x="440" y="109" text-anchor="middle" font-size="9" fill="#3C3489" font-family="var(--font-sans)" font-weight="600">F5 XC GLOBAL NETWORK — 30+ PoP — Anycast DDoS Scrubbing — Bot Defense — Global LB — WAF</text>
+
+  <!-- ====== ON-PREM DC ====== -->
+  <!-- Internet Edge -->
+  <g class="node-btn" onclick="showInfo('Internet Edge (On-Prem)','Firewall NGFW (Palo Alto / Fortinet / Cisco), IPS, DDoS scrubber, BGP edge router. Best practice: redundant ISP, BCP38 filtering')">
+    <rect x="20" y="138" width="245" height="38" rx="6" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"></rect>
+    <text x="142" y="162" text-anchor="middle" font-size="11" fill="#0C447C" font-family="var(--font-sans)" font-weight="500">🔥 NGFW + IPS (Palo Alto / Fortinet)</text>
+  </g>
+
+  <!-- F5 XC CE on-prem -->
+  <g class="node-btn" onclick="showInfo('F5 XC Customer Edge (On-Prem)','XC CE Node deploy เป็น VM หรือ bare-metal ใน DC เชื่อมต่อ F5 Global Network ทำ App Connect, WAF, API Security, Bot Defense, Multi-cloud Networking')">
+    <rect x="20" y="190" width="245" height="38" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="1.5"></rect>
+    <text x="142" y="208" text-anchor="middle" font-size="11" fill="#26215C" font-family="var(--font-sans)" font-weight="600">★ F5 XC Customer Edge (CE)</text>
+    <text x="142" y="221" text-anchor="middle" font-size="9" fill="#3C3489" font-family="var(--font-sans)">App Connect · WAF · Bot · API Sec</text>
+  </g>
+
+  <!-- ADC / LB -->
+  <g class="node-btn" onclick="showInfo('ADC / Load Balancer (On-Prem)','F5 BIG-IP หรือ NGINX Plus ทำ SSL offload, L7 LB, iRule, TCP optimization. F5 XC orchestrate BIG-IP ผ่าน BIGIP-Next Controller')">
+    <rect x="20" y="242" width="245" height="38" rx="6" fill="#E6F1FB" stroke="#185FA5" stroke-width="0.5"></rect>
+    <text x="142" y="260" text-anchor="middle" font-size="11" fill="#0C447C" font-family="var(--font-sans)" font-weight="500">⚖️ ADC / BIG-IP (SSL · LB · iRule)</text>
+    <text x="142" y="273" text-anchor="middle" font-size="9" fill="#185FA5" font-family="var(--font-sans)">Orchestrated by F5 XC</text>
+  </g>
+
+  <!-- Monolithic App -->
+  <rect x="20" y="295" width="245" height="100" rx="8" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5" stroke-dasharray="3 2"></rect>
+  <text x="142" y="312" text-anchor="middle" font-size="10" fill="#5F5E5A" font-family="var(--font-sans)" font-weight="500">MONOLITHIC APPLICATION</text>
+  <g class="node-btn" onclick="showInfo('Core Banking (Monolith)','T24 Temenos, Finacle, FIS Profile — ระบบ legacy ทำงานบน IBM AIX / Oracle / RHEL. API adapter layer expose บาง service ออกมา')">
+    <rect x="30" y="318" width="105" height="34" rx="5" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5"></rect>
+    <text x="82" y="339" text-anchor="middle" font-size="10" fill="#2C2C2A" font-family="var(--font-sans)" font-weight="500">🏦 Core Banking</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('ERP / MES (Monolith)','SAP ECC, Oracle EBS สำหรับ manufacturing. ทำ B2B EDI, supply chain, WMS. มักเป็น monolith ขนาดใหญ่')">
+    <rect x="148" y="318" width="108" height="34" rx="5" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.5"></rect>
+    <text x="202" y="339" text-anchor="middle" font-size="10" fill="#2C2C2A" font-family="var(--font-sans)" font-weight="500">🏭 ERP / MES</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Database Tier','Oracle RAC, DB2, MSSQL Always-On. F5 XC protect DB API layer และ encrypt traffic ด้วย mTLS')">
+    <rect x="30" y="360" width="225" height="30" rx="5" fill="#B4B2A9" stroke="#5F5E5A" stroke-width="0.5"></rect>
+    <text x="142" y="380" text-anchor="middle" font-size="10" fill="#2C2C2A" font-family="var(--font-sans)" font-weight="500">🗄 Oracle RAC / DB2 / MSSQL</text>
+  </g>
+
+  <!-- DR / Backup -->
+  <g class="node-btn" onclick="showInfo('DR / Backup','Veeam, NetBackup, tape. F5 XC ช่วย Global Server LB failover ระหว่าง primary DC กับ DR site โดยอัตโนมัติ')">
+    <rect x="20" y="408" width="245" height="34" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"></rect>
+    <text x="142" y="429" text-anchor="middle" font-size="11" fill="#444441" font-family="var(--font-sans)" font-weight="500">💾 DR / Backup (Veeam / NetBackup)</text>
+  </g>
+
+  <!-- HSM / PKI -->
+  <g class="node-btn" onclick="showInfo('HSM / PKI / SIEM','Thales HSM, CyberArk, Splunk/IBM QRadar. F5 XC telemetry ส่ง log เข้า SIEM เพื่อ correlation rule')">
+    <rect x="20" y="453" width="245" height="34" rx="6" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"></rect>
+    <text x="142" y="474" text-anchor="middle" font-size="11" fill="#412402" font-family="var(--font-sans)" font-weight="500">🔐 HSM / PKI / SIEM (Splunk)</text>
+  </g>
+  <!-- MPLS / SD-WAN -->
+  <g class="node-btn" onclick="showInfo('SD-WAN / MPLS Edge','เชื่อมสาขา ATM กลับ DC. F5 XC รองรับ SD-WAN overlay ผ่าน IPsec tunnel เข้า XC CE')">
+    <rect x="20" y="498" width="245" height="34" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="142" y="519" text-anchor="middle" font-size="11" fill="#04342C" font-family="var(--font-sans)" font-weight="500">📡 SD-WAN / MPLS (Branch Connect)</text>
+  </g>
+  <!-- Compliance -->
+  <g class="node-btn" onclick="showInfo('Compliance Zone','BoT (Bank of Thailand) PDPA, PCI-DSS, ISO 27001. F5 XC ช่วย enforce TLS 1.3, audit log, data masking')">
+    <rect x="20" y="543" width="245" height="34" rx="6" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.5"></rect>
+    <text x="142" y="564" text-anchor="middle" font-size="11" fill="#501313" font-family="var(--font-sans)" font-weight="500">📋 BoT / PCI-DSS / PDPA Compliance</text>
+  </g>
+
+  <!-- ====== PRIVATE CLOUD ====== -->
+  <g class="node-btn" onclick="showInfo('F5 XC Customer Edge (Private Cloud)','XC CE บน VMware vSphere หรือ OpenStack VM. ใช้ร่วมกับ Tanzu / OpenShift cluster. ทำ East-West security ระหว่าง namespace')">
+    <rect x="305" y="138" width="250" height="38" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="1.5"></rect>
+    <text x="430" y="156" text-anchor="middle" font-size="11" fill="#26215C" font-family="var(--font-sans)" font-weight="600">★ F5 XC CE (Private Cloud)</text>
+    <text x="430" y="169" text-anchor="middle" font-size="9" fill="#3C3489" font-family="var(--font-sans)">App Mesh · mTLS · Observability</text>
+  </g>
+
+  <!-- API GW -->
+  <g class="node-btn" onclick="showInfo('API Gateway (Private Cloud)','Kong, Apigee, AWS API GW on-prem. F5 XC API Security layer นั่งหน้า GW ทำ schema validation, rate limit, bot detect')">
+    <rect x="305" y="190" width="250" height="38" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="430" y="212" text-anchor="middle" font-size="11" fill="#04342C" font-family="var(--font-sans)" font-weight="500">🔌 API Gateway (Kong / Apigee)</text>
+  </g>
+
+  <!-- Microservice zone -->
+  <rect x="305" y="242" width="250" height="175" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5" stroke-dasharray="3 2"></rect>
+  <text x="430" y="260" text-anchor="middle" font-size="10" fill="#0F6E56" font-family="var(--font-sans)" font-weight="500">MICROSERVICE (Kubernetes / OpenShift)</text>
+  <g class="node-btn" onclick="showInfo('Payment Service','ระบบ PromptPay, SWIFT, card processing. Deploy บน K8s. F5 XC ทำ mTLS service mesh, RBAC, API schema enforce')">
+    <rect x="313" y="266" width="110" height="32" rx="5" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="368" y="286" text-anchor="middle" font-size="10" fill="#04342C" font-family="var(--font-sans)" font-weight="500">💳 Payment Svc</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Auth / IAM Service','OAuth2, OIDC, FIDO2 biometric. F5 XC ทำ Bot Defense หน้า auth endpoint, credential stuffing protection')">
+    <rect x="436" y="266" width="110" height="32" rx="5" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="491" y="286" text-anchor="middle" font-size="10" fill="#04342C" font-family="var(--font-sans)" font-weight="500">🔑 Auth / IAM</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Notification Service','SMS, Email, Push notification. High throughput. F5 XC rate limit ป้องกัน SMS flood abuse')">
+    <rect x="313" y="308" width="110" height="32" rx="5" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="368" y="328" text-anchor="middle" font-size="10" fill="#04342C" font-family="var(--font-sans)" font-weight="500">📲 Notification</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Loan / Credit Service','Credit scoring, loan origination. ข้อมูล PII สูง. F5 XC data masking, DLP ใน API response')">
+    <rect x="436" y="308" width="110" height="32" rx="5" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="491" y="328" text-anchor="middle" font-size="10" fill="#04342C" font-family="var(--font-sans)" font-weight="500">💰 Loan / Credit</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Service Mesh','Istio / Linkerd. F5 XC ทำ East-West WAF ระหว่าง pod, mutual TLS enforcement, anomaly detection')">
+    <rect x="313" y="350" width="233" height="32" rx="5" fill="#5DCAA5" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="430" y="370" text-anchor="middle" font-size="10" fill="#04342C" font-family="var(--font-sans)" font-weight="500">🕸 Service Mesh (Istio) + East-West WAF</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Message Bus','Kafka, RabbitMQ สำหรับ async event. F5 XC monitor consumer lag, protect Kafka REST proxy')">
+    <rect x="313" y="392" width="233" height="22" rx="5" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="430" y="407" text-anchor="middle" font-size="9" fill="#04342C" font-family="var(--font-sans)" font-weight="500">📨 Kafka / RabbitMQ Event Bus</text>
+  </g>
+
+  <!-- Observability -->
+  <g class="node-btn" onclick="showInfo('Observability Stack','Prometheus, Grafana, Jaeger, ELK. F5 XC ส่ง telemetry — metrics, trace, log — เข้า stack นี้โดย native')">
+    <rect x="305" y="428" width="250" height="34" rx="6" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"></rect>
+    <text x="430" y="449" text-anchor="middle" font-size="11" fill="#412402" font-family="var(--font-sans)" font-weight="500">📊 Observability (Prometheus / Grafana)</text>
+  </g>
+  <!-- CI/CD -->
+  <g class="node-btn" onclick="showInfo('CI/CD &amp; GitOps','GitLab CI, ArgoCD. F5 XC config-as-code ผ่าน Terraform provider, push WAF policy ผ่าน pipeline')">
+    <rect x="305" y="472" width="250" height="34" rx="6" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"></rect>
+    <text x="430" y="493" text-anchor="middle" font-size="11" fill="#04342C" font-family="var(--font-sans)" font-weight="500">🚀 CI/CD / GitOps (ArgoCD / Terraform)</text>
+  </g>
+  <!-- Data lake -->
+  <g class="node-btn" onclick="showInfo('Data Lake / Analytics','Hadoop HDFS, MinIO, Spark สำหรับ fraud ML model. F5 XC protect Spark REST API, S3-compatible endpoint')">
+    <rect x="305" y="516" width="250" height="34" rx="6" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"></rect>
+    <text x="430" y="537" text-anchor="middle" font-size="11" fill="#173404" font-family="var(--font-sans)" font-weight="500">🧊 Data Lake / ML Platform (Spark)</text>
+  </g>
+  <!-- Backup private -->
+  <g class="node-btn" onclick="showInfo('Ceph / SDS Storage','Ceph, NetApp ONTAP. Storage fabric สำหรับ persistent volume ใน K8s')">
+    <rect x="305" y="560" width="250" height="34" rx="6" fill="#F1EFE8" stroke="#5F5E5A" stroke-width="0.5"></rect>
+    <text x="430" y="581" text-anchor="middle" font-size="11" fill="#444441" font-family="var(--font-sans)" font-weight="500">💿 Ceph / NetApp SDS Storage</text>
+  </g>
+
+  <!-- ====== PUBLIC CLOUD ====== -->
+  <g class="node-btn" onclick="showInfo('F5 XC RE / CE (Public Cloud)','XC Regional Edge หรือ CE deploy บน AWS / Azure / GCP. ทำ Cloud WAF, Global LB, DDoS, API Security สำหรับ cloud-native app')">
+    <rect x="590" y="138" width="270" height="38" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="1.5"></rect>
+    <text x="725" y="156" text-anchor="middle" font-size="11" fill="#26215C" font-family="var(--font-sans)" font-weight="600">★ F5 XC RE / CE (Public Cloud)</text>
+    <text x="725" y="169" text-anchor="middle" font-size="9" fill="#3C3489" font-family="var(--font-sans)">Cloud WAF · DDoS · Global LB · CSPM</text>
+  </g>
+
+  <!-- Cloud LB / CDN -->
+  <g class="node-btn" onclick="showInfo('Cloud LB / CDN','AWS ALB, Azure Front Door, CloudFront. F5 XC นั่งหน้าหรือ integrate ผ่าน WAF chaining. ทำ Global LB ข้าม multi-cloud')">
+    <rect x="590" y="190" width="270" height="38" rx="6" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5"></rect>
+    <text x="725" y="212" text-anchor="middle" font-size="11" fill="#4A1B0C" font-family="var(--font-sans)" font-weight="500">🌐 CDN / Cloud LB (ALB / Front Door)</text>
+  </g>
+
+  <!-- Cloud Microservice -->
+  <rect x="590" y="242" width="270" height="175" rx="8" fill="#FAECE7" stroke="#993C1D" stroke-width="0.5" stroke-dasharray="3 2"></rect>
+  <text x="725" y="260" text-anchor="middle" font-size="10" fill="#993C1D" font-family="var(--font-sans)" font-weight="500">CLOUD-NATIVE (EKS / AKS / GKE)</text>
+  <g class="node-btn" onclick="showInfo('Digital Banking App (Cloud)','Next.js / React frontend, Node.js BFF. Deploy บน EKS. F5 XC WAF + Bot Defense ป้องกัน layer 7 attack')">
+    <rect x="598" y="266" width="120" height="32" rx="5" fill="#F5C4B3" stroke="#993C1D" stroke-width="0.5"></rect>
+    <text x="658" y="286" text-anchor="middle" font-size="10" fill="#4A1B0C" font-family="var(--font-sans)" font-weight="500">📱 Digital Banking</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Insurance / Wealth Platform','Robo-advisor, policy management. SaaS-style deployment. F5 XC Multi-tenant WAF, per-tenant policy')">
+    <rect x="732" y="266" width="120" height="32" rx="5" fill="#F5C4B3" stroke="#993C1D" stroke-width="0.5"></rect>
+    <text x="792" y="286" text-anchor="middle" font-size="10" fill="#4A1B0C" font-family="var(--font-sans)" font-weight="500">🛡 Insurance / Wealth</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('E-Commerce Platform','Shopify-style, marketplace. Flash sale traffic spike. F5 XC Auto-scale WAF, Bot ป้องกัน scalping bot')">
+    <rect x="598" y="308" width="120" height="32" rx="5" fill="#F5C4B3" stroke="#993C1D" stroke-width="0.5"></rect>
+    <text x="658" y="328" text-anchor="middle" font-size="10" fill="#4A1B0C" font-family="var(--font-sans)" font-weight="500">🛒 E-Commerce</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Healthcare / Telemedicine','Patient portal, FHIR API. ข้อมูล sensitive สูง. F5 XC ทำ HIPAA compliance layer, PHI data masking')">
+    <rect x="732" y="308" width="120" height="32" rx="5" fill="#F5C4B3" stroke="#993C1D" stroke-width="0.5"></rect>
+    <text x="792" y="328" text-anchor="middle" font-size="10" fill="#4A1B0C" font-family="var(--font-sans)" font-weight="500">🏥 Healthcare</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('Serverless / FaaS','Lambda, Azure Functions. F5 XC protect API endpoint หน้า FaaS, rate limit, auth token validation')">
+    <rect x="598" y="350" width="254" height="32" rx="5" fill="#F0997B" stroke="#993C1D" stroke-width="0.5"></rect>
+    <text x="725" y="370" text-anchor="middle" font-size="10" fill="#4A1B0C" font-family="var(--font-sans)" font-weight="500">⚡ Serverless (Lambda / Functions) + FaaS</text>
+  </g>
+  <g class="node-btn" onclick="showInfo('AI / GenAI Platform','Bedrock, OpenAI API, Azure OpenAI. F5 XC ทำ AI Gateway — rate limit, PII filter, prompt injection detect')">
+    <rect x="598" y="392" width="254" height="22" rx="5" fill="#F5C4B3" stroke="#993C1D" stroke-width="0.5"></rect>
+    <text x="725" y="407" text-anchor="middle" font-size="9" fill="#4A1B0C" font-family="var(--font-sans)" font-weight="500">🤖 AI / GenAI Platform (Bedrock / OpenAI)</text>
+  </g>
+
+  <!-- Cloud Storage -->
+  <g class="node-btn" onclick="showInfo('Cloud Storage / Data Warehouse','S3, Azure Blob, BigQuery, Snowflake. F5 XC protect S3-compatible API, enforce signed URL policy')">
+    <rect x="590" y="428" width="270" height="34" rx="6" fill="#FAEEDA" stroke="#BA7517" stroke-width="0.5"></rect>
+    <text x="725" y="449" text-anchor="middle" font-size="11" fill="#412402" font-family="var(--font-sans)" font-weight="500">🪣 S3 / BigQuery / Snowflake</text>
+  </g>
+  <!-- CSPM -->
+  <g class="node-btn" onclick="showInfo('Cloud Security (CSPM / CWPP)','Prisma Cloud, Wiz, Defender for Cloud. F5 XC เป็น Control Plane ด้าน Network Security ทำงานคู่กับ CSPM')">
+    <rect x="590" y="472" width="270" height="34" rx="6" fill="#FCEBEB" stroke="#A32D2D" stroke-width="0.5"></rect>
+    <text x="725" y="493" text-anchor="middle" font-size="11" fill="#501313" font-family="var(--font-sans)" font-weight="500">🛡 CSPM / CWPP (Prisma / Wiz)</text>
+  </g>
+  <!-- Zero Trust -->
+  <g class="node-btn" onclick="showInfo('Zero Trust Access','ZTNA สำหรับ developer, privileged admin. F5 XC App Connect + Private Access ทำ clientless ZTNA ไม่ต้องติด VPN')">
+    <rect x="590" y="516" width="270" height="34" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="1"></rect>
+    <text x="725" y="537" text-anchor="middle" font-size="11" fill="#26215C" font-family="var(--font-sans)" font-weight="500">🔒 Zero Trust (F5 XC Private Access)</text>
+  </g>
+  <!-- DevSecOps -->
+  <g class="node-btn" onclick="showInfo('DevSecOps / Policy as Code','Shift-left security. F5 XC WAF policy ส่ง via Terraform/Helm chart ใน GitOps pipeline')">
+    <rect x="590" y="560" width="270" height="34" rx="6" fill="#EAF3DE" stroke="#3B6D11" stroke-width="0.5"></rect>
+    <text x="725" y="581" text-anchor="middle" font-size="11" fill="#173404" font-family="var(--font-sans)" font-weight="500">🔧 DevSecOps / Policy-as-Code</text>
+  </g>
+
+  <!-- ====== ARROWS ====== -->
+  <!-- Users to F5 XC layer -->
+  <line x1="80" y1="66" x2="80" y2="97" stroke="#534AB7" stroke-width="1" marker-end="url(#arr)" opacity=".7"></line>
+  <line x1="200" y1="66" x2="200" y2="97" stroke="#534AB7" stroke-width="1" marker-end="url(#arr)" opacity=".7"></line>
+  <line x1="460" y1="66" x2="460" y2="97" stroke="#534AB7" stroke-width="1" marker-end="url(#arr)" opacity=".7"></line>
+  <line x1="590" y1="66" x2="590" y2="97" stroke="#A32D2D" stroke-width="1" marker-end="url(#arr)" opacity=".7"></line>
+  <line x1="715" y1="66" x2="715" y2="97" stroke="#534AB7" stroke-width="1" marker-end="url(#arr)" opacity=".7"></line>
+
+  <!-- F5 layer to CE nodes -->
+  <line x1="142" y1="112" x2="142" y2="137" stroke="#534AB7" stroke-width="1.5" marker-end="url(#arr)" opacity=".8"></line>
+  <line x1="430" y1="112" x2="430" y2="137" stroke="#534AB7" stroke-width="1.5" marker-end="url(#arr)" opacity=".8"></line>
+  <line x1="725" y1="112" x2="725" y2="137" stroke="#534AB7" stroke-width="1.5" marker-end="url(#arr)" opacity=".8"></line>
+
+  <!-- On-prem internal -->
+  <line x1="142" y1="176" x2="142" y2="189" stroke="#185FA5" stroke-width="0.8" marker-end="url(#arr)" opacity=".6"></line>
+  <line x1="142" y1="228" x2="142" y2="241" stroke="#185FA5" stroke-width="0.8" marker-end="url(#arr)" opacity=".6"></line>
+  <line x1="142" y1="280" x2="142" y2="294" stroke="#5F5E5A" stroke-width="0.8" marker-end="url(#arr)" opacity=".6"></line>
+
+  <!-- Cross-zone arrows (on-prem <-> private) -->
+  <line x1="265" y1="209" x2="304" y2="209" stroke="#534AB7" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#arr)" opacity=".7"></line>
+  <!-- private <-> public -->
+  <line x1="556" y1="209" x2="589" y2="209" stroke="#534AB7" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#arr)" opacity=".7"></line>
+
+  <!-- Private internal -->
+  <line x1="430" y1="176" x2="430" y2="189" stroke="#0F6E56" stroke-width="0.8" marker-end="url(#arr)" opacity=".6"></line>
+  <line x1="430" y1="228" x2="430" y2="241" stroke="#0F6E56" stroke-width="0.8" marker-end="url(#arr)" opacity=".6"></line>
+  <!-- Cloud internal -->
+  <line x1="725" y1="176" x2="725" y2="189" stroke="#993C1D" stroke-width="0.8" marker-end="url(#arr)" opacity=".6"></line>
+  <line x1="725" y1="228" x2="725" y2="241" stroke="#993C1D" stroke-width="0.8" marker-end="url(#arr)" opacity=".6"></line>
+  </svg>
   </div>
 
-  <script>
-    function sayHello() {
-      document.getElementById("msg").innerText = "ยินดีต้อนรับสู่เว็บของคุณ!";
-    }
-  </script>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#534AB7"></div> F5 XC Node (CE/RE)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#185FA5"></div> On-Prem DC</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0F6E56"></div> Private Cloud</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#993C1D"></div> Public Cloud</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#5F5E5A"></div> Legacy / Monolith</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#A32D2D"></div> Threat / Compliance</div>
+  </div>
 
-</body>
-</html>
+  <div class="info-box" id="info-box">
+    <button class="close-btn" onclick="document.getElementById('info-box').classList.remove('show')">✕ ปิด</button>
+    <h4 id="info-title"></h4>
+    <p id="info-desc"></p>
+  </div>
+</div>
+
+<!-- USE CASES PANEL -->
+<div class="panel" id="panel-usecases">
+  <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px">F5 XC ให้คุณค่าสูงสุดใน use case เหล่านี้ คลิกเพื่อดูรายละเอียด</div>
+  <div class="uc-grid" id="uc-grid"><div class="uc-card"><span class="uc-tag" style="background:#EEEDFE;color:#26215C">WAF / WAAP</span><div class="uc-title">Web App &amp; API Protection (WAAP)</div><div class="uc-desc">Positive security model ด้วย ML signature + behavioral analytics. ป้องกัน OWASP Top-10, ze…</div></div><div class="uc-card"><span class="uc-tag" style="background:#FCEBEB;color:#501313">Bot Defense</span><div class="uc-title">Advanced Bot Defense</div><div class="uc-desc">JavaScript challenge + telemetry fingerprint 3000+ สัญญาณ ตรวจ human vs bot ในระดับ click …</div></div><div class="uc-card"><span class="uc-tag" style="background:#FAEEDA;color:#412402">DDoS</span><div class="uc-title">Global DDoS Mitigation</div><div class="uc-desc">Anycast PoP 30+ จุดทั่วโลก absorb volumetric DDoS ก่อนถึง origin. L3-L7 detection ผ่าน ML.…</div></div><div class="uc-card"><span class="uc-tag" style="background:#E1F5EE;color:#04342C">Multi-cloud LB</span><div class="uc-title">Global Server Load Balancing (GSLB)</div><div class="uc-desc">Health-aware DNS + anycast routing ข้าม on-prem / AWS / Azure / GCP. ทำ failover อัตโนมัติ…</div></div><div class="uc-card"><span class="uc-tag" style="background:#E6F1FB;color:#042C53">API Security</span><div class="uc-title">API Discovery &amp; Security</div><div class="uc-desc">Auto-discover shadow API ด้วย ML traffic analysis. Enforce OpenAPI schema, rate limit per …</div></div><div class="uc-card"><span class="uc-tag" style="background:#EEEDFE;color:#26215C">Zero Trust</span><div class="uc-title">Zero Trust Network Access (ZTNA)</div><div class="uc-desc">F5 XC Private Access ทำ clientless ZTNA ผ่าน browser. ไม่ต้องติด VPN client. Identity-awar…</div></div><div class="uc-card"><span class="uc-tag" style="background:#EAF3DE;color:#173404">Service Mesh</span><div class="uc-title">East-West Security (App Mesh)</div><div class="uc-desc">mTLS enforcement ระหว่าง microservice, namespace-level policy, L7 aware circuit breaker. ท…</div></div><div class="uc-card"><span class="uc-tag" style="background:#FBEAF0;color:#4B1528">AI Gateway</span><div class="uc-title">AI / GenAI Protection</div><div class="uc-desc">F5 XC AI Gateway (2024-2025) ทำ rate limit per LLM endpoint, PII detection ใน prompt/respo…</div></div><div class="uc-card"><span class="uc-tag" style="background:#E1F5EE;color:#04342C">OT/Edge</span><div class="uc-title">Industrial Edge Security</div><div class="uc-desc">XC CE บน ruggedized hardware หรือ x86 mini-server ที่ factory floor. Micro-segment OT netw…</div></div><div class="uc-card"><span class="uc-tag" style="background:#FAECE7;color:#4A1B0C">Compliance</span><div class="uc-title">Regulatory Compliance Automation</div><div class="uc-desc">Pre-built policy สำหรับ PCI-DSS, PDPA, BoT Cybersecurity Framework, HIPAA. Audit log immut…</div></div></div>
+  <div class="info-box" id="uc-info-box">
+    <button class="close-btn" onclick="document.getElementById('uc-info-box').classList.remove('show')">✕</button>
+    <h4 id="uc-info-title"></h4>
+    <p id="uc-info-desc"></p>
+  </div>
+</div>
+
+<!-- COMPETITIVE PANEL -->
+<div class="panel" id="panel-compete">
+  <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">เปรียบเทียบ F5 XC กับคู่แข่งหลักในตลาด WAAP / Multi-cloud Networking / Bot Defense</div>
+  <table class="comp-table">
+    <thead><tr>
+      <th style="width:14%">คู่แข่ง</th>
+      <th style="width:16%">Solution หลัก</th>
+      <th style="width:22%">จุดแข็ง</th>
+      <th style="width:22%">จุดอ่อน vs F5 XC</th>
+      <th style="width:14%">F5 XC ได้เปรียบ</th>
+      <th style="width:12%">ตลาด TH</th>
+    </tr></thead>
+    <tbody id="comp-tbody"><tr>
+    <td style="font-weight:500;font-size:12px">Cloudflare</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">WAF, CDN, DDoS, ZTNA, API GW</td>
+    <td style="font-size:11px">Global CDN PoP 300+, ราคาถูก, easy onboard, Workers edge compute</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">ไม่มี on-prem CE, limited L4 app connect, bot defense ด้อยกว่า F5 XC signal depth</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">แข่งตรงกันทุก deal โดยเฉพาะ SME</td>
+  </tr><tr>
+    <td style="font-weight:500;font-size:12px">Akamai</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">WAF, Bot, DDoS, CDN, ZTNA (EAA/ETP)</td>
+    <td style="font-size:11px">CDN market leader, Prolexic DDoS largest capacity, brand trust enterprise</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">ราคาสูงมาก, complex licensing, app mesh / multi-cloud networking ไม่ครบ</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">แข่งใน large bank / telco</td>
+  </tr><tr>
+    <td style="font-weight:500;font-size:12px">Imperva</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">WAF, Bot, DDoS, Data Security</td>
+    <td style="font-size:11px">Database firewall + WAF combo, compliance-friendly, Distil bot</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">multi-cloud networking ไม่มี, M&amp;A integration ไม่ smooth, cloud WAF performance</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">แข่งใน financial, healthcare</td>
+  </tr><tr>
+    <td style="font-weight:500;font-size:12px">AWS Shield + WAF</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">Cloud-native WAF, Shield Advanced DDoS</td>
+    <td style="font-size:11px">Native AWS integration ราคา predictable, tight EKS integration</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">Single cloud, on-prem ไม่มี, bot defense limited, WAF rule เขียนเอง</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">deal ที่ lock-in AWS อยู่แล้ว</td>
+  </tr><tr>
+    <td style="font-weight:500;font-size:12px">Palo Alto SASE</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">Prisma Access, Prisma Cloud, ZTNA</td>
+    <td style="font-size:11px">SASE leader, CASB/SWG แข็งแกร่ง, Cortex AI XDR</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">WAF / App security ด้อยกว่า F5 XC, API security ไม่ครบ, ไม่มี GSLB</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">แข่งด้าน ZTNA / SASE budget</td>
+  </tr><tr>
+    <td style="font-weight:500;font-size:12px">Zscaler</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">ZIA, ZPA, ZTNA, SWG</td>
+    <td style="font-size:11px">ZTNA market leader, zero-trust architecture native, proxy-based inspection</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">ไม่ทำ WAF/WAAP เลย, app delivery / LB ไม่มี, ต้อง pair กับ solution อื่น</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">มักขายร่วม ไม่ค่อยแข่งตรง</td>
+  </tr><tr>
+    <td style="font-weight:500;font-size:12px">Radware</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">Cloud WAF, Bot, DDoS, ADC</td>
+    <td style="font-size:11px">DDoS scrubbing center, DefensePro hardware, ADC on-prem</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">cloud-native weak, global PoP น้อยกว่า, ecosystem integration จำกัด</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">แข่งใน telco, on-prem centric</td>
+  </tr><tr>
+    <td style="font-weight:500;font-size:12px">HAProxy/NGINX+Modsec</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">OSS LB + WAF</td>
+    <td style="font-size:11px">ฟรี, flexible, กว้างขวาง OSS community</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">ต้อง manage เอง, ไม่มี bot/AI, ไม่มี global network, security ops cost สูง</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">ลูกค้าที่ price-sensitive มาก</td>
+  </tr></tbody>
+  </table>
+  <div style="margin-top:16px;padding:12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)">
+    <div style="font-size:12px;font-weight:500;margin-bottom:6px">กลยุทธ์การแข่งขันของ F5 XC ในตลาดไทย / SEA</div>
+    <div style="font-size:11px;color:var(--color-text-secondary);line-height:1.8">
+      🏦 <strong>Banking:</strong> อ้างอิง BoT Cybersecurity Framework, PCI-DSS compliance out-of-the-box, ลดเวลา audit<br>
+      🏭 <strong>Industry:</strong> OT/IT convergence — XC CE ที่ edge factory ทำ micro-segmentation โดยไม่ต้องเปลี่ยน OT<br>
+      ☁️ <strong>Multi-cloud:</strong> Single pane of glass ไม่ว่าจะเป็น AWS / Azure / GCP / On-prem — ลด tool sprawl<br>
+      🤖 <strong>AI Era:</strong> AI Gateway ป้องกัน prompt injection, PII leakage ใน GenAI app — differentiator ใหม่<br>
+      💼 <strong>Licensing:</strong> Subscription per-app ไม่ใช่ per-device ทำให้ opex model เหมาะกับ cloud-first org
+    </div>
+  </div>
+</div>
+
+<script>
+// Tab switching
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t=>{ if(t.textContent.toLowerCase().includes(id.substring(0,4))) t.classList.add('active'); });
+}
+// Fix tab click match
+document.querySelectorAll('.tab').forEach((t,i)=>{
+  const ids=['topology','usecases','compete'];
+  t.onclick=()=>showPanel(ids[i]);
+});
+
+// Info box
+function showInfo(title, desc){
+  document.getElementById('info-title').textContent=title;
+  document.getElementById('info-desc').textContent=desc;
+  const box=document.getElementById('info-box');
+  box.classList.add('show');
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// Use cases data
+const usecases=[
+  {tag:'WAF / WAAP',color:'#EEEDFE',tcolor:'#26215C',title:'Web App & API Protection (WAAP)',desc:'Positive security model ด้วย ML signature + behavioral analytics. ป้องกัน OWASP Top-10, zero-day exploit, API schema violation. ทำงานร่วมกับ BIG-IP เดิมผ่าน WAF chaining ไม่ต้องเปลี่ยน infrastructure'},
+  {tag:'Bot Defense',color:'#FCEBEB',tcolor:'#501313',title:'Advanced Bot Defense',desc:'JavaScript challenge + telemetry fingerprint 3000+ สัญญาณ ตรวจ human vs bot ในระดับ click pattern, sensor data. แก้ปัญหา credential stuffing บน banking login, OTP abuse, scalping bot บน e-commerce flash sale'},
+  {tag:'DDoS',color:'#FAEEDA',tcolor:'#412402',title:'Global DDoS Mitigation',desc:'Anycast PoP 30+ จุดทั่วโลก absorb volumetric DDoS ก่อนถึง origin. L3-L7 detection ผ่าน ML. SLA clean traffic < 30 วินาที. ป้องกัน DNS flood, HTTP flood, slow-rate attack'},
+  {tag:'Multi-cloud LB',color:'#E1F5EE',tcolor:'#04342C',title:'Global Server Load Balancing (GSLB)',desc:'Health-aware DNS + anycast routing ข้าม on-prem / AWS / Azure / GCP. ทำ failover อัตโนมัติ, latency-based routing, geolocation routing สำหรับ banking DR scenario ได้ RTO < 60 วินาที'},
+  {tag:'API Security',color:'#E6F1FB',tcolor:'#042C53',title:'API Discovery & Security',desc:'Auto-discover shadow API ด้วย ML traffic analysis. Enforce OpenAPI schema, rate limit per consumer, detect BOLA (Broken Object Level Authorization). เหมาะกับ Open Banking PSD2, FinTech API marketplace'},
+  {tag:'Zero Trust',color:'#EEEDFE',tcolor:'#26215C',title:'Zero Trust Network Access (ZTNA)',desc:'F5 XC Private Access ทำ clientless ZTNA ผ่าน browser. ไม่ต้องติด VPN client. Identity-aware + device posture + continuous verification. เหมาะสำหรับ developer remote access, third-party vendor, M&A integration'},
+  {tag:'Service Mesh',color:'#EAF3DE',tcolor:'#173404',title:'East-West Security (App Mesh)',desc:'mTLS enforcement ระหว่าง microservice, namespace-level policy, L7 aware circuit breaker. ทำงานร่วมกับ Istio/Linkerd หรือแทนได้. ป้องกัน lateral movement ใน K8s cluster'},
+  {tag:'AI Gateway',color:'#FBEAF0',tcolor:'#4B1528',title:'AI / GenAI Protection',desc:'F5 XC AI Gateway (2024-2025) ทำ rate limit per LLM endpoint, PII detection ใน prompt/response, prompt injection defense, model output filter. เหมาะกับ bank ที่ deploy chatbot GenAI หน้า customer'},
+  {tag:'OT/Edge',color:'#E1F5EE',tcolor:'#04342C',title:'Industrial Edge Security',desc:'XC CE บน ruggedized hardware หรือ x86 mini-server ที่ factory floor. Micro-segment OT network, ป้องกัน IT/OT lateral movement, anomaly detection บน Modbus/PROFINET protocol wrapper'},
+  {tag:'Compliance',color:'#FAECE7',tcolor:'#4A1B0C',title:'Regulatory Compliance Automation',desc:'Pre-built policy สำหรับ PCI-DSS, PDPA, BoT Cybersecurity Framework, HIPAA. Audit log immutable, TLS 1.3 enforcement, data masking ใน API response. ลดเวลา pen-test remediation'},
+];
+
+const grid=document.getElementById('uc-grid');
+usecases.forEach(u=>{
+  const c=document.createElement('div');
+  c.className='uc-card';
+  c.innerHTML=`<span class="uc-tag" style="background:${u.color};color:${u.tcolor}">${u.tag}</span><div class="uc-title">${u.title}</div><div class="uc-desc">${u.desc.substring(0,90)}…</div>`;
+  c.onclick=()=>{
+    document.getElementById('uc-info-title').textContent=u.title;
+    document.getElementById('uc-info-desc').textContent=u.desc;
+    const b=document.getElementById('uc-info-box');
+    b.classList.add('show');
+    b.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+  grid.appendChild(c);
+});
+
+// Competitor data
+const competitors=[
+  {name:'Cloudflare',sol:'WAF, CDN, DDoS, ZTNA, API GW',strength:'Global CDN PoP 300+, ราคาถูก, easy onboard, Workers edge compute',weakness:'ไม่มี on-prem CE, limited L4 app connect, bot defense ด้อยกว่า F5 XC signal depth',advantage:'win',market:'แข่งตรงกันทุก deal โดยเฉพาะ SME'},
+  {name:'Akamai',sol:'WAF, Bot, DDoS, CDN, ZTNA (EAA/ETP)',strength:'CDN market leader, Prolexic DDoS largest capacity, brand trust enterprise',weakness:'ราคาสูงมาก, complex licensing, app mesh / multi-cloud networking ไม่ครบ',advantage:'win',market:'แข่งใน large bank / telco'},
+  {name:'Imperva',sol:'WAF, Bot, DDoS, Data Security',strength:'Database firewall + WAF combo, compliance-friendly, Distil bot',weakness:'multi-cloud networking ไม่มี, M&A integration ไม่ smooth, cloud WAF performance',advantage:'win',market:'แข่งใน financial, healthcare'},
+  {name:'AWS Shield + WAF',sol:'Cloud-native WAF, Shield Advanced DDoS',strength:'Native AWS integration ราคา predictable, tight EKS integration',weakness:'Single cloud, on-prem ไม่มี, bot defense limited, WAF rule เขียนเอง',advantage:'win',market:'deal ที่ lock-in AWS อยู่แล้ว'},
+  {name:'Palo Alto SASE',sol:'Prisma Access, Prisma Cloud, ZTNA',strength:'SASE leader, CASB/SWG แข็งแกร่ง, Cortex AI XDR',weakness:'WAF / App security ด้อยกว่า F5 XC, API security ไม่ครบ, ไม่มี GSLB',advantage:'win',market:'แข่งด้าน ZTNA / SASE budget'},
+  {name:'Zscaler',sol:'ZIA, ZPA, ZTNA, SWG',strength:'ZTNA market leader, zero-trust architecture native, proxy-based inspection',weakness:'ไม่ทำ WAF/WAAP เลย, app delivery / LB ไม่มี, ต้อง pair กับ solution อื่น',advantage:'win',market:'มักขายร่วม ไม่ค่อยแข่งตรง'},
+  {name:'Radware',sol:'Cloud WAF, Bot, DDoS, ADC',strength:'DDoS scrubbing center, DefensePro hardware, ADC on-prem',weakness:'cloud-native weak, global PoP น้อยกว่า, ecosystem integration จำกัด',advantage:'win',market:'แข่งใน telco, on-prem centric'},
+  {name:'HAProxy/NGINX+Modsec',sol:'OSS LB + WAF',strength:'ฟรี, flexible, กว้างขวาง OSS community',weakness:'ต้อง manage เอง, ไม่มี bot/AI, ไม่มี global network, security ops cost สูง',advantage:'win',market:'ลูกค้าที่ price-sensitive มาก'},
+];
+
+const tbody=document.getElementById('comp-tbody');
+competitors.forEach(c=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td style="font-weight:500;font-size:12px">${c.name}</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">${c.sol}</td>
+    <td style="font-size:11px">${c.strength}</td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">${c.weakness}</td>
+    <td><span class="badge badge-win">F5 XC ได้เปรียบ</span></td>
+    <td style="font-size:11px;color:var(--color-text-secondary)">${c.market}</td>
+  `;
+  tbody.appendChild(tr);
+});
+</script>
+
+
+</body></html>
